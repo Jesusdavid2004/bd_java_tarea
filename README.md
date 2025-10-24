@@ -3,6 +3,7 @@
 ## 👩‍💻 Integrantes
 - **Camila Bastidas**
 - **Evelin Pulsara**
+- **Jesus Villota**
 
 ---
 
