@@ -1,32 +1,45 @@
 package com.ucc;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-
-import com.ucc.connection.DatabaseConnection;
 import com.ucc.model.Actor;
 import com.ucc.repository.ActorRepository;
 import com.ucc.repository.IRepository;
+import com.ucc.connection.DatabaseConnetion;
+
+import java.sql.Connection;
 
 public class Main {
-    public static void main(String[] args) throws SQLException {
-       
-        try(Connection myConn = DatabaseConnection.getInstanceConnection()){
-            Actor actor = new Actor();
-            actor.setActor_id(9999);
-            actor.setFirst_name("PepitoCode2");
-            actor.setLast_name("pepitoCode2");
-            
-            IRepository actorRepository = new ActorRepository();
-            actorRepository.save(actor);
+    public static void main(String[] args) {
+        try (Connection ignored = DatabaseConnetion.getInstanceConnection()) {
 
-            actorRepository.findAll().forEach(System.out::println);
+            IRepository repo = new ActorRepository();
+
+            // CREATE (id manual para la demo)
+            System.out.println("=== CREATE ===");
+            Actor a = new Actor();
+            a.setActor_id(9999);
+            a.setFirst_name("PepitoCode2");
+            a.setLast_name("PepitoCode2");
+            repo.save(a);
+            System.out.println("Inserted: " + a);
+
+            // GET BY ID
+            System.out.println("\n=== GET BY ID ===");
+            System.out.println("Found: " + repo.findById(9999));
+
+            // UPDATE
+            System.out.println("\n=== UPDATE ===");
+            a.setFirst_name("PepitoUpdated");
+            a.setLast_name("PepitoUpdated");
+            System.out.println("Rows updated: " + repo.update(a));
+            System.out.println("After update: " + repo.findById(9999));
+
+            // DELETE
+            System.out.println("\n=== DELETE ===");
+            System.out.println("Rows deleted: " + repo.delete(9999));
 
         } catch (Exception e) {
-            System.out.println("Conexion Fail");
-        } 
+            System.out.println("Connection Fail: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
-}   
+}

@@ -1,49 +1,85 @@
 package com.ucc.repository;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import com.ucc.connection.DatabaseConnetion;
+import com.ucc.model.Actor;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.ucc.connection.DatabaseConnection;
-import com.ucc.model.Actor;
+public class ActorRepository implements IRepository {
 
-public class ActorRepository implements IRepository{
-
-    private Connection getConnection() throws SQLException{
-        return DatabaseConnection.getInstanceConnection();
+    private Connection getConnection() throws SQLException {
+        return DatabaseConnetion.getInstanceConnection();
     }
 
-
+    // -------- Read all (given)
     @Override
-    public List<Actor> findAll() throws SQLException{
+    public List<Actor> findAll() throws SQLException {
         List<Actor> actors = new ArrayList<>();
-        try (Statement myStat = getConnection().createStatement();
-            ResultSet myRes= myStat.executeQuery("Select * from sakila.actor")) {
-            while (myRes.next()) {
-                Actor newActor = new Actor();
-                newActor.setActor_id(myRes.getInt("actor_id"));
-                newActor.setFirst_name(myRes.getString("first_name"));
-                newActor.setLast_name(myRes.getString("last_name"));
-                actors.add(newActor);
+        String sql = "SELECT actor_id, first_name, last_name FROM actor";
+        try (Statement st = getConnection().createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Actor a = new Actor();
+                a.setActor_id(rs.getInt("actor_id"));
+                a.setFirst_name(rs.getString("first_name"));
+                a.setLast_name(rs.getString("last_name"));
+                actors.add(a);
             }
-        } 
+        }
         return actors;
     }
 
+    // -------- Create (given)
     @Override
     public Actor save(Actor actor) throws SQLException {
-        String sql = "INSERT INTO sakila.actor(actor_id,first_name,last_name) VALUES (?,?,?)";
-        try(PreparedStatement myPrepare = getConnection().prepareStatement(sql);  ){
-            myPrepare.setInt(1, actor.getActor_id() );
-            myPrepare.setString(2, actor.getFirst_name() );
-            myPrepare.setString(3,actor.getLast_name() );    
-            myPrepare.executeUpdate();
+        String sql = "INSERT INTO actor(actor_id, first_name, last_name) VALUES (?,?,?)";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, actor.getActor_id());
+            ps.setString(2, actor.getFirst_name());
+            ps.setString(3, actor.getLast_name());
+            ps.executeUpdate();
         }
         return actor;
     }
-    
+
+    // === TASK 1: GetById ===
+    @Override
+    public Actor findById(int id) throws SQLException {
+        String sql = "SELECT actor_id, first_name, last_name FROM actor WHERE actor_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                Actor a = new Actor();
+                a.setActor_id(rs.getInt("actor_id"));
+                a.setFirst_name(rs.getString("first_name"));
+                a.setLast_name(rs.getString("last_name"));
+                return a;
+            }
+        }
+    }
+
+    // === TASK 2: Update ===
+    @Override
+    public int update(Actor actor) throws SQLException {
+        String sql = "UPDATE actor SET first_name = ?, last_name = ? WHERE actor_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setString(1, actor.getFirst_name());
+            ps.setString(2, actor.getLast_name());
+            ps.setInt(3, actor.getActor_id());
+            return ps.executeUpdate(); // 0 o 1
+        }
+    }
+
+    // === TASK 3: Delete ===
+    @Override
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM actor WHERE actor_id = ?";
+        try (PreparedStatement ps = getConnection().prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate(); // 0 o 1
+        }
+    }
 }
